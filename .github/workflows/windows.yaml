@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        windows-version: ['10', '11']
+        windows-version: ['10']
         windows-featurepack: ['22h2-ent']
 
     steps:
