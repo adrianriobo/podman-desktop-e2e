@@ -31,7 +31,7 @@ jobs:
             --conn-details-output '/workspace' \
             --windows-version '${{ matrix.windows-version }}' \
             --windows-featurepack '${{ matrix.windows-featurepack }}' \
-            --vmsize 'Standard_D8a_v4' \
+            --vmsize 'Standard_D8s_v4' \
             --tags project=podman-desktop \
             --spot
         # Check logs 
@@ -81,13 +81,14 @@ jobs:
         # Check logs 
         podman logs -f pd-e2e-windows
 
-    - name: upload results
+    - name: upload podman desktop e2e results
       uses: actions/upload-artifact@v3
       with:
-        name: results-windows-${{ matrix.windows-version }}${{ matrix.windows-featurepack }}
+        name: pd-results-windows-${{ matrix.windows-version }}${{ matrix.windows-featurepack }}
         path: pd-e2e-results-*.xml
 
     - name: Run podman functional e2e test
+      timeout-minutes: 30
       run: |
         # Get latest built 
         tag=$(curl --silent https://api.github.com/repos/containers/podman-desktop/releases | jq -r 'map(select(.prerelease)) | first | .tag_name')
@@ -108,6 +109,12 @@ jobs:
                   -junitResultsFilename podman-e2e-results-${tag}.xml 
         # Check logs 
         podman logs -f podman-e2e
+
+    - name: upload podman e2e results
+      uses: actions/upload-artifact@v3
+      with:
+        name: podman-results-windows-${{ matrix.windows-version }}${{ matrix.windows-featurepack }}
+        path: podman-e2e-results-*.xml
 
     - name: Destroy instance
       if: always()
