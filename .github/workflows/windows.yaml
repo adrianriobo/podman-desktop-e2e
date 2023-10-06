@@ -87,6 +87,28 @@ jobs:
         name: results-windows-${{ matrix.windows-version }}${{ matrix.windows-featurepack }}
         path: pd-e2e-results-*.xml
 
+    - name: Run podman functional e2e test
+      run: |
+        # Get latest built 
+        tag=$(curl --silent https://api.github.com/repos/containers/podman-desktop/releases | jq -r 'map(select(.prerelease)) | first | .tag_name')
+        # Run e2e tests
+        podman run --rm -d --name podman-e2e \
+          -e TARGET_HOST=$(cat host) \
+          -e TARGET_HOST_USERNAME=$(cat username) \
+          -e TARGET_HOST_KEY_PATH=/data/id_rsa \
+          -e TARGET_FOLDER=podman-e2e \
+          -e TARGET_RESULTS=podman-e2e-results-${tag}.xml \
+          -e OUTPUT_FOLDER=/data \
+          -e DEBUG=true \
+          -v $PWD:/data:z \
+          quay.io/rhqp/podman-backend-e2e:v4.7.1-windows-amd64 \
+              podman-e2e/run.ps1 \
+                  -targetFolder podman-e2e \
+                  -podmanVersion "4.7.1" \ 
+                  -junitResultsFilename podman-e2e-results-${tag}.xml 
+        # Check logs 
+        podman logs -f podman-e2e
+
     - name: Destroy instance
       if: always()
       run: |
