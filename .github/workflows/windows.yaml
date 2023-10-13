@@ -62,9 +62,12 @@ jobs:
     - name: Install wsl2
       run: |
         # Install wsl2
-        echo "Install wsl2"
+        echo "set wsl version to 2"
         ssh -i id_rsa -o StrictHostKeyChecking=no \
+                        -o ServerAliveInterval=30 \
+                        -o ServerAliveCountMax=1200 \
                         $(cat username)@$(cat host) "wsl --set-default-version 2"
+        echo "install wsl"
         ssh -i id_rsa -o StrictHostKeyChecking=no \
                         -o ServerAliveInterval=30 \
                         -o ServerAliveCountMax=1200 \
