@@ -66,12 +66,12 @@ jobs:
         ssh -i id_rsa -o StrictHostKeyChecking=no \
                         -o ServerAliveInterval=30 \
                         -o ServerAliveCountMax=1200 \
-                        $(cat username)@$(cat host) "wsl --set-default-version 2"
+                        $(cat username)@$(cat host) "wsl --set-default-version 2" &>/dev/null
         echo "install wsl"
         ssh -i id_rsa -o StrictHostKeyChecking=no \
                         -o ServerAliveInterval=30 \
                         -o ServerAliveCountMax=1200 \
-                        $(cat username)@$(cat host) "wsl --install --no-distribution"
+                        $(cat username)@$(cat host) "wsl --install --no-distribution" &>/dev/null
         # Reboot after 
         echo  "Reboot"
         ssh -i id_rsa -o StrictHostKeyChecking=no \
