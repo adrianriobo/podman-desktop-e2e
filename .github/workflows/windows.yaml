@@ -71,7 +71,8 @@ jobs:
         # Reboot after 
         echo  "Reboot"
         ssh -i id_rsa -o StrictHostKeyChecking=no \
-            $(cat username)@$(cat host) "Restart-Computer -Force" &>/dev/null
+            $(cat username)@$(cat host) "Start-Job -ScriptBlock { Start-Sleep -Seconds 5 && Restart-Computer -Force }" &>/dev/null
+        sleep 10
         # Wait for machine
         while !(nc -z $(cat host) 22 &>/dev/null); do echo "Waiting for machine to come up ..." && sleep 7; done
         
