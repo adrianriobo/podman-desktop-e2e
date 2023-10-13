@@ -60,10 +60,22 @@ jobs:
         podman logs x-session
 
     - name: Install wsl2
-      run:
+      run: |
+        # Install wsl2
+        echo "Install wsl2"
+        ssh -i id_rsa -o StrictHostKeyChecking=no \
+                        $(cat username)@$(cat host) "wsl --set-default-version 2"
+        ssh -i id_rsa -o StrictHostKeyChecking=no \
+                        -o ServerAliveInterval=30 \
+                        -o ServerAliveCountMax=1200 \
+                        $(cat username)@$(cat host) "wsl --install --no-distribution"
+        # Reboot after 
+        echo  "Reboot"
+        ssh -i id_rsa -o StrictHostKeyChecking=no \
+            $(cat username)@$(cat host) "Restart-Computer -Force" &>/dev/null
+        # Wait for machine
+        while !(nc -z $(cat host) 22 &>/dev/null); do echo "Waiting for machine to come up ..." && sleep 7; done
         
-
-
     - name: Run podman desktop e2e
       run: |
         # Get latest built 
