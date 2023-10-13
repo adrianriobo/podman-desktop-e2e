@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        windows-version: ['11']
+        windows-version: ['10']
         windows-featurepack: ['22h2-ent']
 
     steps:
@@ -59,6 +59,11 @@ jobs:
         # Check logs for the x session
         podman logs x-session
 
+    - name: Install wsl2
+      run:
+        
+
+
     - name: Run podman desktop e2e
       run: |
         # Get latest built 
@@ -69,26 +74,21 @@ jobs:
           -e TARGET_HOST_USERNAME=$(cat username) \
           -e TARGET_HOST_KEY_PATH=/data/id_rsa \
           -e TARGET_FOLDER=pd-e2e \
-          -e TARGET_RESULTS=pd-e2e-results-${tag}.xml \
+          -e TARGET_RESULTS=podman-desktop-e2e-results-${tag}.xml \
           -e OUTPUT_FOLDER=/data \
           -e DEBUG=true \
           -v $PWD:/data:z \
           quay.io/rhqp/podman-desktop-e2e:v1.1.0-windows-amd64  \
               pd-e2e/run.ps1 \
                   -targetFolder pd-e2e \
+                  -wslInstallFix 'false' \
                   -pdUrl "https://github.com/containers/podman-desktop/releases/download/${tag}/podman-desktop-${tag:1}.exe" \
-                  -junitResultsFilename pd-e2e-results-${tag}.xml 
+                  -junitResultsFilename podman-desktop-e2e-results-${tag}.xml 
         # Check logs 
         podman logs -f pd-e2e-windows
 
-    - name: upload podman desktop e2e results
-      uses: actions/upload-artifact@v3
-      with:
-        name: pd-results-windows-${{ matrix.windows-version }}${{ matrix.windows-featurepack }}
-        path: pd-e2e-results-*.xml
-
     - name: Run podman functional e2e test
-      timeout-minutes: 30
+      timeout-minutes: 60
       run: |
         # Get latest built 
         tag=$(curl --silent https://api.github.com/repos/containers/podman-desktop/releases | jq -r 'map(select(.prerelease)) | first | .tag_name')
@@ -110,11 +110,13 @@ jobs:
         # Check logs 
         podman logs -f podman-e2e
 
-    - name: upload podman e2e results
+    - name: Upload e2e results
       uses: actions/upload-artifact@v3
       with:
-        name: podman-results-windows-${{ matrix.windows-version }}${{ matrix.windows-featurepack }}
-        path: podman-e2e-results-*.xml
+        name: E2E-results-windows-${{ matrix.windows-version }}${{ matrix.windows-featurepack }}
+        path: |
+          podman-e2e-results-*.xml
+          podman-desktop-e2e-results-*.xml
 
     - name: Destroy instance
       if: always()
