@@ -61,6 +61,7 @@ jobs:
 
     - name: Install wsl2
       run: |
+        set -xuo
         # Install wsl2
         echo "install wsl"
         ssh -i id_rsa -o StrictHostKeyChecking=no \
