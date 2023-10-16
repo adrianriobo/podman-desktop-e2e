@@ -46,23 +46,6 @@ jobs:
           -o ServerAliveCountMax=1200 \
           $(cat username)@$(cat host) "systeminfo"
 
-    - name: Install wsl2
-      run: |
-        set -xuo
-        # Install wsl2
-        echo "install wsl"
-        ssh -i id_rsa -o StrictHostKeyChecking=no \
-                        -o ServerAliveInterval=30 \
-                        -o ServerAliveCountMax=1200 \
-                        $(cat username)@$(cat host) "wsl --install --no-distribution" &>/dev/null
-        # Reboot after 
-        echo  "Reboot"
-        ssh -i id_rsa -o StrictHostKeyChecking=no \
-            $(cat username)@$(cat host) "Start-Process powershell -verb runas -ArgumentList \"Restart-Computer -Force\"" &>/dev/null
-        sleep 5
-        # Wait for machine
-        while !(nc -z $(cat host) 22 &>/dev/null); do echo "Waiting for machine to come up ..." && sleep 3; done
-
     - name: Emulate X session 
       run: |
         # use fake rdp to emulate an active x session
@@ -93,11 +76,20 @@ jobs:
           quay.io/rhqp/podman-desktop-e2e:v1.1.0-windows-amd64  \
               pd-e2e/run.ps1 \
                   -targetFolder pd-e2e \
-                  -wslInstallFix 'false' \
                   -pdUrl "https://github.com/containers/podman-desktop/releases/download/${tag}/podman-desktop-${tag:1}.exe" \
                   -junitResultsFilename podman-desktop-e2e-results-${tag}.xml 
         # Check logs 
         podman logs -f pd-e2e-windows
+
+    - name: Reboot machine
+      run: |
+        # Reboot after 
+        echo  "Reboot"
+        ssh -i id_rsa -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
+            $(cat username)@$(cat host) 'Restart-Computer -Force'
+        echo $?
+        # Wait for machine
+        while !(nc -z $(cat host) 22 &>/dev/null); do echo "Waiting for machine to come up ..." && sleep 3; done
 
     - name: Run podman functional e2e test
       timeout-minutes: 60
