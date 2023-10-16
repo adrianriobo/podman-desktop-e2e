@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        windows-version: ['11']
+        windows-version: ['10']
         windows-featurepack: ['22h2-ent']
 
     steps:
@@ -24,7 +24,7 @@ jobs:
           -e ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }} \
           -e ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }} \
           -e ARM_CLIENT_SECRET='${{ secrets.ARM_CLIENT_SECRET }}' \
-          quay.io/rhqp/qenvs:v0.0.5 azure \
+          quay.io/rhqp/qenvs:v0.0.6-dev azure \
             windows create \
             --project-name 'windows-desktop' \
             --backed-url 'file:///workspace' \
@@ -75,21 +75,12 @@ jobs:
           -v $PWD:/data:z \
           quay.io/rhqp/podman-desktop-e2e:v1.1.0-windows-amd64  \
               pd-e2e/run.ps1 \
+                  -wslInstallFix 'false' \
                   -targetFolder pd-e2e \
                   -pdUrl "https://github.com/containers/podman-desktop/releases/download/${tag}/podman-desktop-${tag:1}.exe" \
                   -junitResultsFilename podman-desktop-e2e-results-${tag}.xml 
         # Check logs 
         podman logs -f pd-e2e-windows
-
-    - name: Reboot machine
-      run: |
-        # Reboot after 
-        echo  "Reboot"
-        ssh -i id_rsa -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
-            $(cat username)@$(cat host) 'Restart-Computer -Force'
-        echo $?
-        # Wait for machine
-        while !(nc -z $(cat host) 22 &>/dev/null); do echo "Waiting for machine to come up ..." && sleep 3; done
 
     - name: Run podman functional e2e test
       timeout-minutes: 60
@@ -132,7 +123,7 @@ jobs:
           -e ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }} \
           -e ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }} \
           -e ARM_CLIENT_SECRET='${{ secrets.ARM_CLIENT_SECRET }}' \
-          quay.io/rhqp/qenvs:v0.0.5 azure \
+          quay.io/rhqp/qenvs:v0.0.6-dev azure \
             windows destroy \
             --project-name 'windows-desktop' \
             --backed-url 'file:///workspace'
